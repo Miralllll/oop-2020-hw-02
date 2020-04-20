@@ -387,7 +387,7 @@ public class JTetris extends JComponent {
 				 newY = currentY;
 			 }
 			 break;
-			 
+
 			default:
 				 throw new RuntimeException("Bad verb");
 		}
@@ -426,7 +426,6 @@ public class JTetris extends JComponent {
 		
 		// try out the new position (rolls back if it doesn't work)
 		int result = setCurrent(newPiece, newX, newY);
-		
 		// if row clearing is going to happen, draw the
 		// whole board so the green row shows up
 		if (result ==  Board.PLACE_ROW_FILLED) {
@@ -435,7 +434,6 @@ public class JTetris extends JComponent {
 		
 
 		boolean failed = (result >= Board.PLACE_OUT_BOUNDS);
-		
 		// if it didn't work, put it back the way it was
 		if (failed) {
 			if (currentPiece != null) board.place(currentPiece, currentX, currentY);

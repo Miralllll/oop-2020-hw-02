@@ -1,5 +1,7 @@
 // Piece.java
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -25,8 +27,8 @@ public class Piece {
 	private int[] skirt;
 	private int width;
 	private int height;
-	private Piece next; // "next" rotation
-
+	private Piece next; // "next" rotation // it's connection between other pieces
+	// in this static array ->
 	static private Piece[] pieces;	// singleton static array of first rotations
 
 	/**
@@ -34,12 +36,50 @@ public class Piece {
 	 Makes its own copy of the array and the TPoints inside it.
 	*/
 	public Piece(TPoint[] points) {
-		// YOUR CODE HERE
+		InitBody(points);
+		InitWidthAndHeight();
+		InitSkirt();
 	}
-	
 
-	
-	
+	/**
+	 Defines a new skirt array, which is depend on the body array
+	 Skirt's length is the width of the piece.
+	 It stores information about the lowest y point for every (y predefined.x).
+	 -- skirt stores the lowest y value that appears in the body for each x value in the piece
+	 */
+	private void InitSkirt() {
+		skirt = new int[width];
+		Arrays.fill(skirt, Integer.MAX_VALUE);
+		for(TPoint p : body)
+			skirt[p.x] = Math.min(skirt[p.x], p.y);
+	}
+
+	/**
+	 Width is the distance between 0 and the furthest x value from o point in the body.
+	 Height is the distance between 0 and the furthest y value from o point in the body.
+	 */
+	private void InitWidthAndHeight() {
+		int maxI = 0, maxJ = 0;
+		for(TPoint p : body){
+			maxI = Math.max(maxI, p.x);
+			maxJ = Math.max(maxJ, p.y);
+		}
+		width = ++ maxI;
+		height = ++ maxJ;
+	}
+
+	/**
+	 Copies some points from points to the body.
+	 Saves only unique points in the array.
+	 */
+	private void InitBody(TPoint[] points) {
+		HashSet<TPoint> bodySet = new HashSet<TPoint>();
+		for(TPoint p : points)
+			if(p != null) bodySet.add(new TPoint(p));
+		body = new TPoint[bodySet.size()];
+		bodySet.toArray(body);
+	}
+
 	/**
 	 * Alternate constructor, takes a String with the x,y body points
 	 * all separated by spaces, such as "0 0  1 0  2 0	1 1".
@@ -68,7 +108,10 @@ public class Piece {
 	 should not modify this array.
 	*/
 	public TPoint[] getBody() {
-		return body;
+		TPoint[] copyBody = new TPoint[body.length];
+		for(int i = 0; i < body.length; i ++)
+			copyBody[i] = new TPoint(body[i]);
+		return copyBody;
 	}
 
 	/**
@@ -78,17 +121,29 @@ public class Piece {
 	 The caller should not modify this array.
 	*/
 	public int[] getSkirt() {
-		return skirt;
+		return Arrays.copyOf(skirt, skirt.length);
 	}
 
-	
 	/**
 	 Returns a new piece that is 90 degrees counter-clockwise
 	 rotated from the receiver.
 	 */
 	public Piece computeNextRotation() {
-		// YOUR CODE HERE
-		return null; // YOUR CODE HERE
+		TPoint[] nextRotation = new TPoint[body.length];
+		for(int currInd = 0; currInd < body.length; currInd ++)
+			nextRotation[currInd] = rotatedPoint(body[currInd]);
+		return new Piece(nextRotation);
+	}
+
+	/**
+	 Calculates x and y values for the rotated point.
+	 */
+	private TPoint rotatedPoint(TPoint tPoint) {
+		int x = tPoint.x, y = tPoint.y; // calculate new coordinates for this point
+		y *= -1; // symmetric to x axis (x, y) / (b) mirroring the body horizontally
+		int shiftUp = height - 1; // delta y
+		y += shiftUp;
+		return new TPoint(y, x); // (a) swapping the x and y for each point
 	}
 
 	/**
@@ -100,8 +155,6 @@ public class Piece {
 	public Piece fastRotation() {
 		return next;
 	}
-	
-
 
 	/**
 	 Returns true if two pieces are the same --
@@ -114,16 +167,15 @@ public class Piece {
 	public boolean equals(Object obj) {
 		// standard equals() technique 1
 		if (obj == this) return true;
-		
 		// standard equals() technique 2
 		// (null will be false)
 		if (!(obj instanceof Piece)) return false;
 		Piece other = (Piece)obj;
-		
-		// YOUR CODE HERE
-		return true;
+		if(other.getBody().length != body.length) return false;
+		ArrayList<TPoint> thisBody = new ArrayList<>(Arrays.asList(body));
+		ArrayList<TPoint> otherBody = new ArrayList<>(Arrays.asList(other.getBody()));
+		return thisBody.containsAll(otherBody);
 	}
-
 
 	// String constants for the standard 7 tetris pieces
 	public static final String STICK_STR	= "0 0	0 1	 0 2  0 3";
@@ -167,12 +219,8 @@ public class Piece {
 				makeFastRotations(new Piece(PYRAMID_STR)),
 			};
 		}
-		
-		
 		return Piece.pieces;
 	}
-	
-
 
 	/**
 	 Given the "first" root rotation of a piece, computes all
@@ -187,11 +235,17 @@ public class Piece {
 	 to the first piece.
 	*/
 	private static Piece makeFastRotations(Piece root) {
-		// YOUR CODE HERE
-		return null; // YOUR CODE HERE
+		Piece curr = root, next = null; // need to have two iteration process together
+		while (true){
+			next = curr.computeNextRotation();
+			// if start point equals this next point,
+			// next point of the curr point should become start point. The End.
+			if(root.equals(next)){ curr.next = root; break; }
+			curr.next = next;
+			curr = next;
+		}
+		return root;
 	}
-	
-	
 
 	/**
 	 Given a string of x,y pairs ("0 0	0 1 0 2 1 0"), parses
@@ -217,8 +271,4 @@ public class Piece {
 		TPoint[] array = points.toArray(new TPoint[0]);
 		return array;
 	}
-
-	
-
-
 }

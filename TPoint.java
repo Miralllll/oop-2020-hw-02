@@ -1,3 +1,5 @@
+import java.awt.*;
+
 //TPoint.java
 /*
  This is just a trivial "struct" type class --
@@ -25,12 +27,12 @@ public class TPoint {
 		this.y = point.y;
 	}
 
+	@Override
 	// Standard equals() override
 	public boolean equals(Object other) {
 		// standard two checks for equals()
 		if (this == other) return true;
 		if (!(other instanceof TPoint)) return false;
-
 		// check if other point same as us
 		TPoint pt = (TPoint)other;
 		return(x==pt.x && y==pt.y);
@@ -40,5 +42,10 @@ public class TPoint {
 	// human-readable String from object
 	public String toString() {
 		return "(" + x + "," + y + ")";
+	}
+
+	@Override
+	public int hashCode() {
+		return new Point(x, y).hashCode();
 	}
 }
